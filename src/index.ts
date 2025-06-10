@@ -166,10 +166,25 @@ export function describeEval(
           const avgScore =
             scores.reduce((acc, s) => acc + (s.score ?? 0), 0) / scores.length;
 
+          // Available for JSON reporter
           testTask.meta.eval = {
             scores: scoresWithName,
             avgScore,
           };
+
+          // Available for JUnit XML reporter
+          await Promise.all(
+            scoresWithName.map(async (s) => {
+              await testTask.context.annotate(
+                s.score?.toString() ?? "0",
+                `evals.score.${s.name}`,
+              );
+            }),
+          );
+          await testTask.context.annotate(
+            avgScore.toString(),
+            "evals.scoreAvg",
+          );
 
           if (threshold) {
             assert(
